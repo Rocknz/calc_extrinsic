@@ -1,0 +1,3 @@
+[submodule "gazebo_env"]
+	path = gazebo_env
+	url = https://github.com/Rocknz/gazebo_env
