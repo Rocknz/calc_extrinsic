@@ -17,10 +17,12 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 add_executable(${PROJECT_NAME} src/calc_extrinsic.cpp)
+ament_target_dependencies(${PROJECT_NAME} Eigen3)
 target_link_libraries(${PROJECT_NAME} nlopt)
 
 install(TARGETS ${PROJECT_NAME}
