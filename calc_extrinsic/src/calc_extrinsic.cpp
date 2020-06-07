@@ -151,6 +151,41 @@ void setData(Data &datas) {
       init[i] = x[i] + 0.02;
     }
   } else if (type == 2) {
+    std::fstream fr, fr2;
+    fr.open("T_bt.txt", std::fstream::in);
+    fr2.open("T_co.txt", std::fstream::in);
+    while (!fr.eof() && !fr2.eof()) {
+      Matrix4d T_bt, T_co;
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          fr >> T_bt(i, j);
+          fr2 >> T_co(i, j);
+        }
+      }
+      if (fr.eof() || fr2.eof()) break;
+      datas.Add(T_bt, T_co);
+    }
+    // initial T_tc;
+    init[0] = 0.1;
+    init[1] = 0.1;
+    init[2] = 0.1;
+    init[3] = 0.1;
+    init[4] = 0.1;
+    init[5] = 0.1;
+    Matrix4d T_tc_init(4, 4);
+    T_tc_init.block<3, 3>(0, 0) = rpy2se3(init[3], init[4], init[5]);
+    T_tc_init.block<3, 1>(0, 3) << init[0], init[1], init[2];
+    Matrix4d T_bt, T_co;
+    datas.val(0, T_bt, T_co);
+    Matrix4d T_bo_init = T_bt * T_tc_init * T_co;
+    init[6] = T_bo_init(0, 3);
+    init[7] = T_bo_init(0, 3);
+    init[8] = T_bo_init(0, 3);
+
+    auto ea = T_bo_init.eulerAngles(0, 1, 2);
+    init[9] = ea(0);
+    init[10] = ea(1);
+    init[11] = ea(2);
   }
 }
 void test() {
