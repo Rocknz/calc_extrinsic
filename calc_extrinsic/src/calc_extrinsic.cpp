@@ -147,21 +147,71 @@ void setData(Data &datas) {
       datas.Add(T_bt, T_co);
     }
 
-    for (int i = 0; i < 6; i++) {
-      init[i] = x[i] + 0.02;
+    std::fstream fr, fr2, val;
+    fr.open("T_bt.txt", std::fstream::out);
+    fr2.open("T_co.txt", std::fstream::out);
+    val.open("x.txt", std::fstream::out);
+
+    for (int i = 0; i < datas.size(); i++) {
+      int j, k;
+      Matrix4d T_bt, T_co;
+      datas.val(i, T_bt, T_co);
+      for (j = 0; j < 3; j++) {
+        fr << T_bt(j, 3) << ",";
+        fr2 << T_co(j, 3) << ",";
+      }
+      Quaterniond q_bt, q_co;
+      q_bt = T_bt.block<3, 3>(0, 0);
+      q_co = T_co.block<3, 3>(0, 0);
+      fr << q_bt.x() << "," << q_bt.y() << "," << q_bt.z() << "," << q_bt.w()
+         << std::endl;
+      fr2 << q_co.x() << "," << q_co.y() << "," << q_co.z() << "," << q_co.w()
+          << std::endl;
     }
+    for (int i = 0; i < 12; i++) {
+      val << x[i] << " ";
+    }
+    fr.close();
+    fr2.close();
+    val.close();
+    // for (int i = 0; i < 6; i++) {
+    //   init[i] = x[i] + 0.02;
+    // }
+
   } else if (type == 2) {
     std::fstream fr, fr2;
     fr.open("T_bt.txt", std::fstream::in);
     fr2.open("T_co.txt", std::fstream::in);
     while (!fr.eof() && !fr2.eof()) {
       Matrix4d T_bt, T_co;
-      for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-          fr >> T_bt(i, j);
-          fr2 >> T_co(i, j);
-        }
+      Quaterniond q_bt, q_co;
+      double val_bt[7], val_co[7];
+      char comma;
+      for (int i = 0; i < 6; i++) {
+        fr >> val_bt[i] >> comma;
+        fr2 >> val_co[i] >> comma;
       }
+      fr >> val_bt[6];
+      fr2 >> val_co[6];
+
+      q_bt.x() = val_bt[3];
+      q_bt.y() = val_bt[4];
+      q_bt.z() = val_bt[5];
+      q_bt.w() = val_bt[6];
+
+      q_co.x() = val_co[3];
+      q_co.y() = val_co[4];
+      q_co.z() = val_co[5];
+      q_co.w() = val_co[6];
+
+      T_bt.setIdentity();
+      T_co.setIdentity();
+
+      T_bt.block<3, 3>(0, 0) = q_bt.matrix();
+      T_bt.block<3, 1>(0, 3) << val_bt[0], val_bt[1], val_bt[2];
+      T_co.block<3, 3>(0, 0) = q_co.matrix();
+      T_co.block<3, 1>(0, 3) << val_co[0], val_co[1], val_co[2];
+
       if (fr.eof() || fr2.eof()) break;
       datas.Add(T_bt, T_co);
     }
@@ -182,10 +232,11 @@ void setData(Data &datas) {
     init[7] = T_bo_init(0, 3);
     init[8] = T_bo_init(0, 3);
 
-    auto ea = T_bo_init.eulerAngles(0, 1, 2);
+    auto ea = T_bo_init.block<3, 3>(0, 0).eulerAngles(0, 1, 2);
     init[9] = ea(0);
     init[10] = ea(1);
     init[11] = ea(2);
+    std::cout << "read end!" << std::endl;
   }
 }
 void test() {
@@ -193,7 +244,8 @@ void test() {
   r = (rand() % 1000) / 1000.0;
   p = (rand() % 1000) / 1000.0;
   y = (rand() % 1000) / 1000.0;
-  p = 0;
+  r = M_PI_2;
+  p = M_PI_2;
   y = 0;
   auto mat = rpy2se3(r, p, y);
   auto ea = mat.eulerAngles(0, 1, 2);
