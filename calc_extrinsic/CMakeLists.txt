@@ -18,6 +18,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(modern_robotics REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -25,7 +26,13 @@ add_executable(${PROJECT_NAME} src/calc_extrinsic.cpp)
 ament_target_dependencies(${PROJECT_NAME} Eigen3)
 target_link_libraries(${PROJECT_NAME} nlopt)
 
-install(TARGETS ${PROJECT_NAME}
+add_executable(${PROJECT_NAME}_joint src/calc_extrinsic_joint.cpp)
+ament_target_dependencies(${PROJECT_NAME}_joint Eigen3 modern_robotics)
+target_link_libraries(${PROJECT_NAME}_joint nlopt )
+
+install(TARGETS 
+  ${PROJECT_NAME}
+  ${PROJECT_NAME}_joint
   DESTINATION lib/${PROJECT_NAME}
 )
 if(BUILD_TESTING)
